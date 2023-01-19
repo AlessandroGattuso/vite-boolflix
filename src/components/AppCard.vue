@@ -24,7 +24,6 @@ export default {
         return ('gb').toUpperCase()
       else
         return this.card.original_language.toUpperCase()
-
     },
     getImage(){
       return `https://image.tmdb.org/t/p/w200${this.card.poster_path}`
@@ -51,11 +50,13 @@ export default {
       <div v-else class="text-light m-3">
         <div>
           <span class="fw-bold">titolo: </span>
-          <span>{{ card.title }}</span>
+          <span v-if="card.title != undefined">{{ card.title }}</span>
+          <span v-else>{{ card.name }}</span>
         </div>
         <div v-show="card.title != card.original_title">
           <span class="fw-bold">titolo originale: </span>
-          <span>{{ card.original_title }}</span>
+          <span v-if="card.original_title != undefined">{{ card.original_title }}</span>
+          <span v-else>{{ card.original_name }}</span>
         </div>
        <div v-if="released" class="d-flex align-items-center gap-2">
         <span class="fw-bold">Voto: </span>

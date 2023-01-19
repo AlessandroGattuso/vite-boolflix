@@ -11,12 +11,15 @@
     },
     data(){
       return{
-        store
+        store,
+        isLoaded: false
       }
     },
     created(){
       this.getPopularCollection();
-      this.getPopularCollection();
+      setTimeout(() => {
+        this.isLoaded = true
+      }, 2000);
     },
     computed: {
       search() {
@@ -36,36 +39,64 @@
     methods:{
       async getPopularCollection(){
 
-        await axios.get(`https://api.themoviedb.org/3/movie/popular?api_key=${store.apikey}&language=en-US&page=1`)
-          .then((response) => {
-            store.movies = (response.data.results)
-          })
+        store.movies = []
+        store.series = []
 
-        await axios.get(`https://api.themoviedb.org/3/tv/popular?api_key=${store.apikey}&language=en-US&page=1`)
+        for(let i = 1; i < 5; ++i){
+          await axios.get(`https://api.themoviedb.org/3/movie/popular?api_key=${store.apikey}&language=en-US&page=${i}`)
           .then((response) => {
-            store.series = (response.data.results)
+            response.data.results.map((movie) => store.movies.push(movie))
+            store.movies = this.filterNetflix(store.movies, 'movie')
           })
-
+          await axios.get(`https://api.themoviedb.org/3/tv/popular?api_key=${store.apikey}&language=en-US&page=${i}`)
+          .then((response) => {
+            response.data.results.map((serie) => store.series.push(serie))        
+            store.series = this.filterNetflix(store.series, 'tv')
+          })
+        }
       },
       async getSearchCollection(){
-      
+        // let flagM = false
+        // let flagS = false
+
         await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${store.apikey}&language=en-US&query=${store.search}`)
         .then((response) => {
-          store.movies = (response.data.results)
+          store.movies = response.data.results
+          //store.movies = this.filterNetflix(store.movies, 'movie')
         })
-
         await axios.get(`https://api.themoviedb.org/3/search/tv?api_key=${store.apikey}&language=en-US&query=${store.search}`)
         .then((response) => {
-          store.series = (response.data.results)
+          store.series = response.data.results
+          //store.series = this.filterNetflix(store.series, 'tv')
         })
-        
+      },
+      filterNetflix(collection, type){
+        let arrayTemp = []
+        collection.map((item) => {
+          axios.get(`https://api.themoviedb.org/3/${type}/${item.id}/watch/providers?api_key=${store.apikey}`)
+            .then((response) => {
+              const result = response.data.results
+              if(result.hasOwnProperty("IT")){
+                if(result.IT.hasOwnProperty("flatrate")){
+                  if(result.IT.flatrate[0].provider_id == 8){
+                    arrayTemp.push(item)
+                  }
+                }
+              }
+          })
+        })
+        console.log(arrayTemp)
+        return arrayTemp;
       }
     }
 }
 </script>
 
 <template>
-  <div class="wrapper">
+  <div v-if="!isLoaded" class="wrapper">
+    
+  </div>
+  <div v-else class="wrapper">
     <AppHeader></AppHeader>
     <AppBody></AppBody>
   </div>
