@@ -41,6 +41,6 @@ export default {
   nav
     height: 100px
   .logo
-      width: 100px
+    width: 100px
 
 </style>

@@ -3,22 +3,25 @@
   import AppBody from './components/AppBody.vue';
   import axios from 'axios'
   import { store } from './store.js'
+  import AppLoader from './components/AppLoader.vue';
 
   export default {
     components:{
       AppHeader,
       AppBody,
+      AppLoader,
     },
     data(){
       return{
         store,
-        isLoaded: false
+        isLoadedPopular: false,
+        isLoadedSearch: true
       }
     },
     created(){
       this.getPopularCollection();
       setTimeout(() => {
-        this.isLoaded = true
+        this.isLoadedPopular = true
       }, 2000);
     },
     computed: {
@@ -33,42 +36,54 @@
         }
         else{
           this.getSearchCollection()
+          setTimeout(() => {
+            this.isLoadedSearch = true
+          }, 2000);
         }
       }
     },
     methods:{
       async getPopularCollection(){
-
         store.movies = []
         store.series = []
-
+        
         for(let i = 1; i < 5; ++i){
           await axios.get(`https://api.themoviedb.org/3/movie/popular?api_key=${store.apikey}&language=en-US&page=${i}`)
-          .then((response) => {
-            response.data.results.map((movie) => store.movies.push(movie))
-            store.movies = this.filterNetflix(store.movies, 'movie')
-          })
+            .then((response) => {
+              response.data.results.map((movie) => store.movies.push(movie))
+              store.movies = this.filterNetflix(store.movies, 'movie')
+            })
           await axios.get(`https://api.themoviedb.org/3/tv/popular?api_key=${store.apikey}&language=en-US&page=${i}`)
-          .then((response) => {
-            response.data.results.map((serie) => store.series.push(serie))        
-            store.series = this.filterNetflix(store.series, 'tv')
-          })
+            .then((response) => {
+              response.data.results.map((serie) => store.series.push(serie))        
+              store.series = this.filterNetflix(store.series, 'tv')
+            })
         }
+
       },
       async getSearchCollection(){
-        // let flagM = false
-        // let flagS = false
+        let flagS = false
+        let flagM = false
 
+        this.isLoadedSearch = false
         await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${store.apikey}&language=en-US&query=${store.search}`)
         .then((response) => {
           store.movies = response.data.results
-          //store.movies = this.filterNetflix(store.movies, 'movie')
+          store.movies = this.filterNetflix(store.movies, 'movie')
+          flagM = true
         })
         await axios.get(`https://api.themoviedb.org/3/search/tv?api_key=${store.apikey}&language=en-US&query=${store.search}`)
         .then((response) => {
           store.series = response.data.results
-          //store.series = this.filterNetflix(store.series, 'tv')
+          store.series = this.filterNetflix(store.series, 'tv')
+          flagS = true
         })
+
+        setTimeout(() => {
+          if(flagS && flagM)
+            this.isLoadedSearch = true
+        }, 2000);
+
       },
       filterNetflix(collection, type){
         let arrayTemp = []
@@ -85,7 +100,6 @@
               }
           })
         })
-        console.log(arrayTemp)
         return arrayTemp;
       }
     }
@@ -93,12 +107,13 @@
 </script>
 
 <template>
-  <div v-if="!isLoaded" class="wrapper">
-    
+  <div v-if="!isLoadedPopular" class="wrapper">
+    <AppLoader/>
   </div>
   <div v-else class="wrapper">
     <AppHeader></AppHeader>
-    <AppBody></AppBody>
+    <AppBody v-if="this.isLoadedSearch"></AppBody>
+    <AppLoader v-else />
   </div>
 </template>
 
@@ -109,4 +124,5 @@
   .wrapper
     background-color: $black
     min-height: 100vh
+
 </style>
