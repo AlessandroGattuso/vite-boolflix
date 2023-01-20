@@ -22,7 +22,7 @@
       this.getPopularCollection();
       setTimeout(() => {
         this.isLoadedPopular = true
-      }, 2000);
+      }, 3000);
     },
     computed: {
       search() {
@@ -38,7 +38,7 @@
           this.getSearchCollection()
           setTimeout(() => {
             this.isLoadedSearch = true
-          }, 2000);
+          }, 3000);
         }
       }
     },
@@ -64,6 +64,8 @@
       async getSearchCollection(){
         let flagS = false
         let flagM = false
+        store.movies = []
+        store.series = []
 
         this.isLoadedSearch = false
         await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${store.apikey}&language=en-US&query=${store.search}`)
@@ -82,7 +84,7 @@
         setTimeout(() => {
           if(flagS && flagM)
             this.isLoadedSearch = true
-        }, 2000);
+        }, 3000);
 
       },
       filterNetflix(collection, type){
